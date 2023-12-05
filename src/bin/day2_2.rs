@@ -1,4 +1,4 @@
-use std::{io::BufReader, io::BufRead, fs::File};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -10,7 +10,9 @@ fn main() {
 
     let games = lines.map(|l| parse(&l.unwrap()));
 
-    let sum = games.map(|g| get_power(&get_min_cubes_needed(&g))).sum::<i32>();
+    let sum = games
+        .map(|g| get_power(&get_min_cubes_needed(&g)))
+        .sum::<i32>();
 
     println!("{}", sum);
 }
@@ -19,13 +21,13 @@ fn main() {
 struct CubeSet {
     red: i32,
     green: i32,
-    blue: i32
+    blue: i32,
 }
 
 #[derive(Debug)]
 struct GameInfo {
     _id: i32,
-    reveals: Vec<CubeSet>
+    reveals: Vec<CubeSet>,
 }
 
 fn elem_max(a: &CubeSet, b: &CubeSet) -> CubeSet {
@@ -37,7 +39,11 @@ fn elem_max(a: &CubeSet, b: &CubeSet) -> CubeSet {
 }
 
 fn get_min_cubes_needed(g: &GameInfo) -> CubeSet {
-    g.reveals.iter().copied().reduce(|a, b| elem_max(&a, &b)).unwrap()
+    g.reveals
+        .iter()
+        .copied()
+        .reduce(|a, b| elem_max(&a, &b))
+        .unwrap()
 }
 
 fn get_power(s: &CubeSet) -> i32 {
@@ -50,10 +56,10 @@ lazy_static! {
 }
 
 fn parse_reveal(reveal_str: &str) -> CubeSet {
-    let mut reveal = CubeSet{
+    let mut reveal = CubeSet {
         red: 0,
         green: 0,
-        blue: 0
+        blue: 0,
     };
     reveal_str.split(", ").for_each(|part| {
         let captures = PART_REGEX.captures(part).unwrap();
@@ -62,7 +68,7 @@ fn parse_reveal(reveal_str: &str) -> CubeSet {
             "red" => reveal.red = num,
             "green" => reveal.green = num,
             "blue" => reveal.blue = num,
-            _ => panic!("invalid color")
+            _ => panic!("invalid color"),
         };
     });
     reveal
@@ -79,6 +85,6 @@ fn parse(line: &str) -> GameInfo {
     let reveals = parse_reveals(game_data);
     GameInfo {
         _id: game_id,
-        reveals: reveals
+        reveals: reveals,
     }
 }

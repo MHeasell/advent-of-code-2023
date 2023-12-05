@@ -1,4 +1,4 @@
-use std::{io::BufReader, io::BufRead, fs::File};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -8,13 +8,29 @@ fn main() {
     let reader = BufReader::new(file);
     let lines = reader.lines().map(|l| l.unwrap()).collect::<Vec<_>>();
 
-    let sum = lines.iter().enumerate().flat_map(|(idx, line)| {
-        let numbers = parse_numbers(line);
-        numbers.iter()
-        .filter(|n| is_valid_number(if idx > 0 { Some(&lines[idx-1])}  else {None}, &lines[idx], if idx < lines.len() - 1 { Some(&lines[idx+1])}  else { None}, n))
-        .map(|n| n.value)
-        .collect::<Vec<_>>()
-    }).sum::<i32>();
+    let sum = lines
+        .iter()
+        .enumerate()
+        .flat_map(|(idx, line)| {
+            let numbers = parse_numbers(line);
+            numbers
+                .iter()
+                .filter(|n| {
+                    is_valid_number(
+                        if idx > 0 { Some(&lines[idx - 1]) } else { None },
+                        &lines[idx],
+                        if idx < lines.len() - 1 {
+                            Some(&lines[idx + 1])
+                        } else {
+                            None
+                        },
+                        n,
+                    )
+                })
+                .map(|n| n.value)
+                .collect::<Vec<_>>()
+        })
+        .sum::<i32>();
 
     println!("{}", sum);
 }
@@ -22,7 +38,7 @@ fn main() {
 struct NumInfo {
     start: usize,
     end: usize,
-    value: i32
+    value: i32,
 }
 
 fn is_symbol(ch: char) -> bool {
@@ -32,8 +48,12 @@ fn is_symbol(ch: char) -> bool {
 fn is_valid_number(l1: Option<&str>, l2: &str, l3: Option<&str>, n: &NumInfo) -> bool {
     let grid_width = l2.len();
 
-    let start = if n.start > 0 { n.start - 1 } else {n.start};
-    let end = if n.end < grid_width { n.end + 1 } else { grid_width };
+    let start = if n.start > 0 { n.start - 1 } else { n.start };
+    let end = if n.end < grid_width {
+        n.end + 1
+    } else {
+        grid_width
+    };
 
     if let Some(l1) = l1 {
         for i in start..end {
@@ -44,7 +64,7 @@ fn is_valid_number(l1: Option<&str>, l2: &str, l3: Option<&str>, n: &NumInfo) ->
     }
 
     if n.start > 0 {
-        if is_symbol(l2.as_bytes()[n.start-1] as char) {
+        if is_symbol(l2.as_bytes()[n.start - 1] as char) {
             return true;
         }
     }
@@ -69,14 +89,13 @@ lazy_static! {
     static ref NUM_REGEX: Regex = Regex::new(r"(\d+)").unwrap();
 }
 
-
 fn parse_numbers(line: &str) -> Vec<NumInfo> {
-    NUM_REGEX.find_iter(line).map(|m| {
-        NumInfo {
+    NUM_REGEX
+        .find_iter(line)
+        .map(|m| NumInfo {
             start: m.start(),
             end: m.end(),
-            value: m.as_str().parse().unwrap()
-        }
-    }).collect()
-
+            value: m.as_str().parse().unwrap(),
+        })
+        .collect()
 }

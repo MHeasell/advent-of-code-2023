@@ -1,7 +1,7 @@
-use std::{io::BufReader, io::BufRead, fs::File};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 use lazy_static::lazy_static;
-use regex::{Regex, Match};
+use regex::{Match, Regex};
 
 fn main() {
     let file = File::open("data/day1/input").unwrap();
@@ -11,7 +11,6 @@ fn main() {
     let val = lines.map(|l| recover_value(&l.unwrap())).sum::<i32>();
 
     println!("{}", val);
-
 }
 
 fn word_to_digit(word: &str) -> Option<i32> {
@@ -25,7 +24,7 @@ fn word_to_digit(word: &str) -> Option<i32> {
         "seven" => Some(7),
         "eight" => Some(8),
         "nine" => Some(9),
-        _ => None
+        _ => None,
     }
 }
 
@@ -34,7 +33,8 @@ fn parse_match(m: &str) -> i32 {
 }
 
 lazy_static! {
-    static ref DIGIT_REGEX: Regex = Regex::new(r"[0-9]|one|two|three|four|five|six|seven|eight|nine").unwrap();
+    static ref DIGIT_REGEX: Regex =
+        Regex::new(r"[0-9]|one|two|three|four|five|six|seven|eight|nine").unwrap();
 }
 
 // Last match could overlap a previous match, e.g. "oneight".
@@ -45,9 +45,9 @@ lazy_static! {
 fn find_last<'a>(r: &Regex, s: &'a str) -> Option<Match<'a>> {
     let m = r.find(s);
     m.map(|m| {
-            let idx = m.start();
-            let next_match = find_last(r, s.get(idx+1..).unwrap());
-            next_match.unwrap_or(m)
+        let idx = m.start();
+        let next_match = find_last(r, s.get(idx + 1..).unwrap());
+        next_match.unwrap_or(m)
     })
 }
 
@@ -58,5 +58,5 @@ fn recover_value(line: &str) -> i32 {
     let first = parse_match(first_match.as_str());
     let last = parse_match(last_match.as_str());
 
-    (10*first) + last
+    (10 * first) + last
 }

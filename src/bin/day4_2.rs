@@ -1,4 +1,4 @@
-use std::{io::BufReader, io::BufRead, fs::File, collections::HashSet};
+use std::{collections::HashSet, fs::File, io::BufRead, io::BufReader};
 
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -8,17 +8,15 @@ fn main() {
     let reader = BufReader::new(file);
     let lines = reader.lines().map(|l| l.unwrap());
 
-    let cards = lines.map(|line| {
-        parse_card(&line)
-    }).collect::<Vec<_>>();
+    let cards = lines.map(|line| parse_card(&line)).collect::<Vec<_>>();
 
     let mut counts = vec![1; cards.len()];
 
     for (idx, card) in cards.iter().enumerate() {
         let num_cards = counts[idx];
         let score = get_score(card);
-        let end = (idx+1+score).min(counts.len());
-        for i in idx+1..end {
+        let end = (idx + 1 + score).min(counts.len());
+        for i in idx + 1..end {
             counts[i] += num_cards;
         }
     }
@@ -41,7 +39,9 @@ fn get_score((winning, have): &Card) -> usize {
 }
 
 fn parse_numbers(nums: &str) -> Vec<i32> {
-    nums.split_ascii_whitespace().map(|x| x.parse().unwrap()).collect()
+    nums.split_ascii_whitespace()
+        .map(|x| x.parse().unwrap())
+        .collect()
 }
 
 fn parse_card(line: &str) -> Card {

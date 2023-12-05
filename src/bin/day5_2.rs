@@ -1,4 +1,4 @@
-use std::{io::BufReader, io::BufRead, fs::File};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 fn main() {
     let file = File::open("data/day5/input").unwrap();
@@ -7,9 +7,17 @@ fn main() {
 
     let seeds = parse_seeds(&lines[0]);
 
-    let maps = lines[2..].split(|l| l == "").map(|c| parse_chunk(c)).collect::<Vec<_>>();
+    let maps = lines[2..]
+        .split(|l| l == "")
+        .map(|c| parse_chunk(c))
+        .collect::<Vec<_>>();
 
-    let answer = seeds.iter().flat_map(|s| seed_range_to_location_range(s, &maps)).map(|i| i.first).min().unwrap();
+    let answer = seeds
+        .iter()
+        .flat_map(|s| seed_range_to_location_range(s, &maps))
+        .map(|i| i.first)
+        .min()
+        .unwrap();
 
     println!("{}", answer);
 }
@@ -27,10 +35,13 @@ struct Interval {
 }
 impl Interval {
     fn new(first: i64, last: i64) -> Interval {
-        Interval{first, last}
+        Interval { first, last }
     }
     fn from_start_len(start: i64, len: i64) -> Interval {
-        Interval { first: start, last: start + len - 1 }
+        Interval {
+            first: start,
+            last: start + len - 1,
+        }
     }
 
     fn overlaps(&self, other: &Interval) -> bool {
@@ -38,11 +49,17 @@ impl Interval {
     }
 
     fn offset(&self, val: i64) -> Interval {
-        Interval { first: self.first + val, last: self.last + val }
+        Interval {
+            first: self.first + val,
+            last: self.last + val,
+        }
     }
 }
 
-fn slice_interval(a: &Interval, b: &Interval) -> (Option<Interval>, Option<Interval>, Option<Interval>) {
+fn slice_interval(
+    a: &Interval,
+    b: &Interval,
+) -> (Option<Interval>, Option<Interval>, Option<Interval>) {
     if !a.overlaps(b) {
         if a.last < b.first {
             return (Some(*a), None, None);
@@ -51,14 +68,14 @@ fn slice_interval(a: &Interval, b: &Interval) -> (Option<Interval>, Option<Inter
     }
 
     if a.first < b.first {
-        let before = Interval::new(a.first,b.first-1);
+        let before = Interval::new(a.first, b.first - 1);
 
         if a.last <= b.last {
-            let middle = Interval::new(b.first,a.last);
+            let middle = Interval::new(b.first, a.last);
             (Some(before), Some(middle), None)
         } else {
             let middle = Interval::new(b.first, b.last);
-            let after = Interval::new(b.last+1, a.last);
+            let after = Interval::new(b.last + 1, a.last);
             (Some(before), Some(middle), Some(after))
         }
     } else {
@@ -67,13 +84,16 @@ fn slice_interval(a: &Interval, b: &Interval) -> (Option<Interval>, Option<Inter
             (None, Some(middle), None)
         } else {
             let middle = Interval::new(a.first, b.last);
-            let after = Interval::new(b.last+1, a.last);
+            let after = Interval::new(b.last + 1, a.last);
             (None, Some(middle), Some(after))
         }
     }
 }
 
-fn translate_single(i: &Interval, table: &Lookup) -> (Option<Interval>, Option<Interval>, Option<Interval>) {
+fn translate_single(
+    i: &Interval,
+    table: &Lookup,
+) -> (Option<Interval>, Option<Interval>, Option<Interval>) {
     let (a, b, c) = slice_interval(i, &table.src);
 
     if let Some(b) = b {
@@ -93,7 +113,7 @@ fn translate(num: &Vec<Interval>, table: &Vec<Lookup>) -> Vec<Interval> {
     for lookup in table {
         let mut new_remaining = Vec::new();
         for interval in remaining_intervals {
-            let (a, b, c) =  translate_single(&interval, lookup);
+            let (a, b, c) = translate_single(&interval, lookup);
             if let Some(b) = b {
                 v.push(b);
             }
@@ -115,30 +135,40 @@ fn translate(num: &Vec<Interval>, table: &Vec<Lookup>) -> Vec<Interval> {
 }
 
 fn seed_range_to_location_range(s: &Interval, maps: &Vec<Vec<Lookup>>) -> Vec<Interval> {
-    maps.iter().fold(vec![*s], |s, m| {
-        translate(&s, m)
-    })
+    maps.iter().fold(vec![*s], |s, m| translate(&s, m))
 }
 
 fn parse_seeds(line: &str) -> Vec<Interval> {
-    line.split_ascii_whitespace().skip(1).collect::<Vec<_>>().chunks(2).map(|x| {
-        let na = x[0].parse::<i64>().unwrap();
-        let nb = x[1].parse::<i64>().unwrap();
-        Interval::from_start_len(na, nb)
-    }).collect()
+    line.split_ascii_whitespace()
+        .skip(1)
+        .collect::<Vec<_>>()
+        .chunks(2)
+        .map(|x| {
+            let na = x[0].parse::<i64>().unwrap();
+            let nb = x[1].parse::<i64>().unwrap();
+            Interval::from_start_len(na, nb)
+        })
+        .collect()
 }
 
 fn parse_chunk(c: &[String]) -> Vec<Lookup> {
     let vals = &c[1..];
-    vals.iter().map(|v| v.split_ascii_whitespace().map(|n| n.parse::<i64>().unwrap()).collect::<Vec<_>>()).map(|ns| {
-        let a = ns[0];
-        let b = ns[1];
-        let c = ns[2];
-        Lookup {
-            src: Interval::from_start_len(b, c),
-            dst_start: a
-        }
-    }).collect::<Vec<_>>()
+    vals.iter()
+        .map(|v| {
+            v.split_ascii_whitespace()
+                .map(|n| n.parse::<i64>().unwrap())
+                .collect::<Vec<_>>()
+        })
+        .map(|ns| {
+            let a = ns[0];
+            let b = ns[1];
+            let c = ns[2];
+            Lookup {
+                src: Interval::from_start_len(b, c),
+                dst_start: a,
+            }
+        })
+        .collect::<Vec<_>>()
 }
 
 #[cfg(test)]
